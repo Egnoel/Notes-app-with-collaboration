@@ -60,12 +60,62 @@ const notesRoute = new Elysia({
       }),
     },
   })
+  // GET /notes/:noteId/collaborators
+  .get(
+    "/:id/collaborators",
+    async ({ params, user, status }) => {
+      try {
+        return await getNoteCollaborators({
+          noteId: params.id,
+          ownerId: user.id,
+        });
+      } catch (error) {
+        if (
+          error instanceof Error &&
+          error.message ===
+          "Note not found or you are not the owner"
+        ) {
+          return status(404, {
+            message: error.message,
+          });
+        }
+
+        throw error;
+      }
+    },
+    {
+      params: z.object({
+        id: z.uuid(),
+      }),
+
+      response: {
+        200: z.array(
+          z.object({
+            id: z.uuid(),
+            userId: z.uuid(),
+            name: z.string(),
+            email: z.string(),
+            image: z.string().nullable(),
+            role: z.enum([
+              "viewer",
+              "editor",
+            ]),
+            createdAt: z.date(),
+          })
+        ),
+
+        404: z.object({
+          message: z.string(),
+        }),
+      },
+    }
+  )
   .post(
-    "/:noteId/collaborators",
+    "/:id/collaborators",
     async ({ params, body, user, status }) => {
       try {
         const collaborator = await addCollaborator({
-          noteId: params.noteId,
+          noteId: params.id,
           ownerId: user.id,
           collaboratorId: body.userId,
           role: body.role,
@@ -117,7 +167,7 @@ const notesRoute = new Elysia({
     },
     {
       params: z.object({
-        noteId: z.uuid(),
+        id: z.uuid(),
       }),
 
       body: z.object({
@@ -189,64 +239,15 @@ const notesRoute = new Elysia({
       }),
     },
   })
-  // GET /notes/:noteId/collaborators
-  .get(
-    "/:noteId/collaborators",
-    async ({ params, user, status }) => {
-      try {
-        return await getNoteCollaborators({
-          noteId: params.noteId,
-          ownerId: user.id,
-        });
-      } catch (error) {
-        if (
-          error instanceof Error &&
-          error.message ===
-          "Note not found or you are not the owner"
-        ) {
-          return status(404, {
-            message: error.message,
-          });
-        }
 
-        throw error;
-      }
-    },
-    {
-      params: z.object({
-        noteId: z.string().uuid(),
-      }),
-
-      response: {
-        200: z.array(
-          z.object({
-            id: z.string().uuid(),
-            userId: z.string().uuid(),
-            name: z.string(),
-            email: z.string(),
-            image: z.string().nullable(),
-            role: z.enum([
-              "viewer",
-              "editor",
-            ]),
-            createdAt: z.date(),
-          })
-        ),
-
-        404: z.object({
-          message: z.string(),
-        }),
-      },
-    }
-  )
 
   // DELETE /notes/:noteId/collaborators/:userId
   .delete(
-    "/:noteId/collaborators/:userId",
+    "/:id/collaborators/:userId",
     async ({ params, user, status }) => {
       try {
         return await removeCollaborator({
-          noteId: params.noteId,
+          noteId: params.id,
           ownerId: user.id,
           collaboratorId: params.userId,
         });
@@ -276,8 +277,8 @@ const notesRoute = new Elysia({
     },
     {
       params: z.object({
-        noteId: z.string().uuid(),
-        userId: z.string().uuid(),
+        id: z.uuid(),
+        userId: z.uuid(),
       }),
 
       response: {
