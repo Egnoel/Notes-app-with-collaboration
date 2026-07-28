@@ -38,7 +38,12 @@ const notesRoute = new Elysia({
     }),
     response: {
       200: z.object({
-        message: z.string(),
+        id: z.string(),
+        title: z.string(),
+        content: z.string(),
+        ownerId: z.string(),
+        createdAt: z.date(),
+        updatedAt: z.date(),
       }),
     },
   })

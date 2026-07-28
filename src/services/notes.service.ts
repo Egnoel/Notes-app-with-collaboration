@@ -18,9 +18,7 @@ export const createNotes = async (body: { title: string; content: string; }, use
         })
         .returning();
 
-    return {
-        message: `Note created with ID: ${note.id}`,
-    };
+    return note;
 }
 
 export const getAllNotes = async (user: { id: string }) => {
