@@ -118,3 +118,61 @@ export const removeCollaborator = async ({
     message: "Collaborator removed successfully",
   };
 };
+
+export const getCollaborator = async ({
+  noteId,
+  userId,
+}: {
+  noteId: string;
+  userId: string;
+}) => {
+
+  const [note] = await db
+    .select({
+      id: notes.id,
+      ownerId: notes.ownerId,
+    })
+    .from(notes)
+    .where(eq(notes.id, noteId))
+    .limit(1);
+
+  if (!note) {
+    throw new Error(
+      "note not found or you are not a collaborator"
+    );
+  }
+
+  if (note.ownerId === userId) {
+    throw new Error(
+      "note not found or you are not a collaborator"
+    );
+  }
+
+  const [collaborator] = await db
+    .select({
+      id: noteCollaborators.id,
+      userId: users.id,
+      name: users.name,
+      email: users.email,
+      image: users.image,
+      role: noteCollaborators.role,
+      createdAt: noteCollaborators.createdAt,
+    })
+    .from(noteCollaborators)
+    .innerJoin(users, eq(users.id, noteCollaborators.userId))
+    .where(
+      and(
+        eq(noteCollaborators.noteId, noteId),
+        eq(noteCollaborators.userId, userId)
+      )
+    )
+    .limit(1);
+
+  if (!collaborator) {
+    throw new Error(
+      "note not found or you are not a collaborator"
+    );
+  }
+
+  return collaborator;
+};

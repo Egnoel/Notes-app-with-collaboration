@@ -1,5 +1,5 @@
 import { betterAuthPlugin } from "@/http/plugins/better-auth";
-import { getNoteCollaborators, removeCollaborator } from "@/services/collaborators.service";
+import { getCollaborator, getNoteCollaborators, removeCollaborator } from "@/services/collaborators.service";
 import { createNotes, deleteNoteById, getAllNotes, getNoteById, updateNoteById, addCollaborator } from "@/services/notes.service";
 import { Elysia } from "elysia";
 import { z } from "zod";
@@ -245,6 +245,47 @@ const notesRoute = new Elysia({
     },
   })
 
+  .get("/:id/collaborator/", async ({ params, user, status }) => {
+    try {
+      return await getCollaborator({
+        noteId: params.id,
+        userId: user.id,
+      });
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message ===
+        "Note not found or you are not the owner"
+      ) {
+        return status(404, {
+          message: error.message,
+        });
+      }
+
+      throw error;
+    }
+  }, {
+    params: z.object({
+      id: z.uuid(),
+    }),
+    response: {
+      200: z.object({
+        id: z.uuid(),
+        userId: z.uuid(),
+        name: z.string(),
+        email: z.string(),
+        image: z.string().nullable(),
+        role: z.enum([
+          "viewer",
+          "editor",
+        ]),
+        createdAt: z.date(),
+      }),
+      404: z.object({
+        message: z.string(),
+      }),
+    },
+  })
 
   // DELETE /notes/:noteId/collaborators/:userId
   .delete(
