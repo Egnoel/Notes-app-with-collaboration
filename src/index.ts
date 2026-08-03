@@ -8,7 +8,7 @@ import usersRoute from "./routes/users.routes";
 
 const app = new Elysia()
   .use(cors({
-    origin: "http://localhost:5173",
+    origin: ["http://localhost:5173", "http://127.0.0.1:5173/"],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization']
